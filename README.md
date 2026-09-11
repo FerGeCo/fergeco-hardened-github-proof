@@ -19,3 +19,4 @@ Framework: https://github.com/FerGeCo/fergeco-devsecops-framework
 
 This harmless addition demonstrates the FerGeCo GitHub gate PASSING for a
 clean, secret-free change.
+PR enforcement capability proof.
