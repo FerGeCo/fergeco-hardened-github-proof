@@ -2,11 +2,10 @@ name: FerGeCo security gate
 
 # Pull Request
 #       │
-#       ├── Secret Scan     (gitleaks — always)
-#       ├── SAST             (appended by /fergeco:init if applicable)
-#       ├── Dependency Scan  (appended by /fergeco:init per detected stack)
-#       ├── Build            (appended by /fergeco:init)
-#       ├── Tests            (appended by /fergeco:init)
+#       ├── Secret Scan      (gitleaks — always)
+#       ├── SAST             (semgrep — always, wherever there is source code)
+#       ├── Dependency Scan  (written by fergeco-init per detected stack)
+#       ├── Tests            (written by fergeco-init when a test command exists)
 #       ▼
 #   ALL PASS → merge allowed (only a real technical gate if this repo has
 #   Layer 3 available — required status checks / branch protection. See
@@ -61,34 +60,30 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # npm audit — Dependency vulnerabilities (locally: installed)
-  # /fergeco:init appends concrete jobs here based on Step 4's findings,
-  # for example (Node):
-  #
-  # dependency-scan:
-  #   name: Dependency scan (npm audit)
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-  #     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-  #       with: { node-version: 20 }
-  #     - run: npm ci
-  #     - run: npm audit --audit-level=high
-  #
-  # build-and-test:
-  #   name: Build & test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-  #     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-  #       with: { node-version: 20 }
-  #     - run: npm ci
-  #     - run: npm run build --if-present
-  #     - run: npm test --if-present
-  #
-  # If you see this comment block unmodified, /fergeco:init's Step 8 was
-  # skipped (--no-ci, no GitHub remote detected, or declined) — re-run it
-  # or add the equivalent jobs by hand for this project's actual stack.
+  sast:
+    name: SAST (semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install semgrep
+        run: pip install --disable-pip-version-check semgrep
+      - name: Scan (p/security-audit — same ruleset as the local baseline scan)
+        run: semgrep --config p/security-audit --error --quiet .
+
+  dependency-scan:
+    name: Dependency scan (npm audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - run: npm install --package-lock-only
+      - run: npm audit --audit-level=high
 
 # ---------------------------------------------------------------------------
 # Production pipeline (separate workflow, NOT created automatically by

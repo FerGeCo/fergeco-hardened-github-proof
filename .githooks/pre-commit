@@ -1,0 +1,24 @@
+#!/bin/sh
+# FerGeCo DevSecOps pre-commit hook — secret scan before every commit.
+# Installed by /fergeco:init via `git config core.hooksPath .githooks`,
+# so this file is tracked and shared with the team (unlike .git/hooks/*).
+#
+# Requires gitleaks: https://github.com/gitleaks/gitleaks
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "fergeco pre-commit: gitleaks not installed, skipping secret scan." >&2
+  echo "  Install it (e.g. 'brew install gitleaks') to enable this check." >&2
+  exit 0
+fi
+
+gitleaks protect --staged --no-banner --redact
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "" >&2
+  echo "fergeco pre-commit: gitleaks found a likely secret in staged changes." >&2
+  echo "  Fix it, or if this is a false positive, see gitleaks docs for" >&2
+  echo "  .gitleaksignore. Do not bypass with --no-verify without checking." >&2
+fi
+
+exit $status

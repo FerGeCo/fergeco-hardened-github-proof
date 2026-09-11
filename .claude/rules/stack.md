@@ -19,6 +19,7 @@
 |---|---|---|
 | gitleaks | Secret scanning | installed |
 | npm audit | Dependency vulnerabilities | installed |
+| semgrep | SAST | not installed |
 
 The Security Agent runs these on every review. If a tool listed as
 "not installed" is still shown here, install it before relying on this
@@ -26,12 +27,12 @@ project's Security gate, or re-run `/fergeco:init`.
 
 ## CI / CD
 
-No CI workflows detected.
+GitHub Actions present: fergeco-security-gate.yml
 
 SBOM (syft) is available but requires a defined release/build step to attach to — deliberately not wired into CI automatically.
 
 ## Layer 3 (git-provider enforcement)
 
-AVAILABLE but NOT CONFIGURED on 'master'
+AVAILABLE but NOT CONFIGURED on 'proof/sast-blocks-vuln'
 
 Layer 3 is the only layer that can actually block a merge. See this plugin's SECURITY.md, "Operating modes".
