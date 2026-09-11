@@ -14,3 +14,8 @@ Actions run.
 
 See the parent framework repository for the actual FerGeCo DevSecOps
 Framework: https://github.com/FerGeCo/fergeco-devsecops-framework
+
+## Capability proof note
+
+This harmless addition demonstrates the FerGeCo GitHub gate PASSING for a
+clean, secret-free change.
