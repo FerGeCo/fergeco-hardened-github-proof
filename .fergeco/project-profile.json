@@ -1,0 +1,16 @@
+{
+  "build_command": null,
+  "deployment_type": "unknown",
+  "fergeco_mode": "hardened",
+  "framework": [],
+  "language": [
+    "JavaScript/TypeScript"
+  ],
+  "lint_command": null,
+  "package_manager": null,
+  "security_tools": [
+    "gitleaks",
+    "npm audit"
+  ],
+  "test_command": null
+}

@@ -1,0 +1,6 @@
+
+# FerGeCo runtime state and evidence — never committed.
+# project-profile.json is deliberately NOT excluded: it is stable,
+# team-useful metadata and carries the operating mode.
+.fergeco/state/
+.fergeco/artifacts/

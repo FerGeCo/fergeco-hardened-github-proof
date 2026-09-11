@@ -1,0 +1,108 @@
+name: FerGeCo security gate
+
+# Pull Request
+#       │
+#       ├── Secret Scan     (gitleaks — always)
+#       ├── SAST             (appended by /fergeco:init if applicable)
+#       ├── Dependency Scan  (appended by /fergeco:init per detected stack)
+#       ├── Build            (appended by /fergeco:init)
+#       ├── Tests            (appended by /fergeco:init)
+#       ▼
+#   ALL PASS → merge allowed (only a real technical gate if this repo has
+#   Layer 3 available — required status checks / branch protection. See
+#   this plugin's SECURITY.md: on a GitHub Free private repo, this is
+#   advisory only, not enforced by GitHub itself.)
+
+# ACTION PINNING — read before adding a `uses:` here.
+# Every third-party action in this workflow is pinned to a full 40-character
+# commit SHA, and the trailing comment records which release tag that SHA was
+# at the time of pinning. A movable tag (@v4, @v2, @main) is not a pin: the
+# upstream owner, or anyone who compromises them, can repoint it at different
+# code after review, and this workflow runs inside the FerGeCo trusted gate.
+# `fergeco-init` REFUSES to write this file if any `uses:` here is not a full
+# SHA, and tests/test-fergeco-init.py fails the build if one appears, so an
+# unpinned action cannot reach a generated project. When you bump a pin,
+# resolve the new SHA from the upstream repository (`gh api
+# repos/<owner>/<repo>/tags`) and update the tag comment with it.
+
+# SECRET / UNTRUSTED-CODE SEPARATION — read before adding a job here.
+# For a pull request from a branch inside the same repository, GitHub runs
+# the PULL REQUEST'S version of this file. Anything you add below is
+# therefore attacker-controlled until a human reviews it, and it runs
+# BEFORE the merge — so CODEOWNERS cannot protect a secret exposed here.
+# Never reference an API key, deploy credential, or registry token in this
+# workflow. If a check genuinely needs a secret, put it in a separate
+# `workflow_run` workflow that GitHub sources from the default branch and
+# that never checks out or executes the candidate commit. See this
+# plugin's SECURITY.md, "Secret / untrusted-code separation", and
+# `.github/workflows/fergeco-trusted-review.yml` for a worked example.
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+# Least privilege: read-only by default, re-stated per job so a new job
+# cannot silently inherit something wider from the repository default.
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # npm audit — Dependency vulnerabilities (locally: installed)
+  # /fergeco:init appends concrete jobs here based on Step 4's findings,
+  # for example (Node):
+  #
+  # dependency-scan:
+  #   name: Dependency scan (npm audit)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+  #     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+  #       with: { node-version: 20 }
+  #     - run: npm ci
+  #     - run: npm audit --audit-level=high
+  #
+  # build-and-test:
+  #   name: Build & test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+  #     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+  #       with: { node-version: 20 }
+  #     - run: npm ci
+  #     - run: npm run build --if-present
+  #     - run: npm test --if-present
+  #
+  # If you see this comment block unmodified, /fergeco:init's Step 8 was
+  # skipped (--no-ci, no GitHub remote detected, or declined) — re-run it
+  # or add the equivalent jobs by hand for this project's actual stack.
+
+# ---------------------------------------------------------------------------
+# Production pipeline (separate workflow, NOT created automatically by
+# /fergeco:init — this is a template to copy and adapt once this project
+# has a real deploy target, per Fase 10 of the master prompt):
+#
+# Merge → Build → Security → Deploy staging → DAST (if a web app) →
+#   HUMAN APPROVAL (GitHub `environment: production` with required
+#   reviewers — only technically enforced if this repo's plan/visibility
+#   supports it, see SECURITY.md) → Production
+#
+# environment: production   # <- requires required-reviewers support
+# steps:
+#   - deploy to staging
+#   - run OWASP ZAP baseline scan against the staging URL
+#   - (environment protection rule pauses here for a required reviewer)
+#   - deploy to production

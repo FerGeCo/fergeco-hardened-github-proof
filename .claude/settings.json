@@ -1,0 +1,41 @@
+{
+  "$comment": "Installed into a project's .claude/settings.json by /fergeco:init. This is Layer 2 (technically enforced by Claude Code) — not a substitute for Layer 3 (git-provider branch protection / required reviewers), which must be configured separately and may require a paid GitHub/GitLab plan for private repos. See SECURITY.md.",
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git branch -D*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git checkout .)",
+      "Bash(git restore .)",
+      "Bash(*--no-verify*)",
+      "Bash(*--no-gpg-sign*)",
+      "Bash(gh secret*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh api*/rulesets*DELETE*)",
+      "Read(*.env)",
+      "Read(*.env.*)",
+      "Read(**/credentials.json)",
+      "Read(**/credentials*.json)",
+      "Read(**/*secret*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Read(**/.fergeco/state/.integrity-key)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      "Bash(npm publish*)",
+      "Bash(*deploy*)",
+      "Bash(terraform apply*)",
+      "Bash(terraform destroy*)",
+      "Bash(kubectl apply*)",
+      "Bash(kubectl delete*)",
+      "Bash(docker push*)",
+      "Bash(*production*)"
+    ]
+  }
+}
